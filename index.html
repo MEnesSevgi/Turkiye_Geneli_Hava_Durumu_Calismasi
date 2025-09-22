@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>2. havadurumu</title>
+  
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Türkiye Şehirleri Haritası - Anlık Hava Durumu</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Calibri, sans-serif;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .map-container {
+            height: 600px;
+            width: 100%;
+        }
+        /* Lejant stilleri */
+        .legend {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+        }
+        .legend-section {
+            margin-bottom: 10px;
+            min-width: 150px;
+        }
+        .legend-section h4 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 3px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #000;
+        }
+        /* Kontrol paneli butonları */
+        .leaflet-control.leaflet-bar {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            font-family: Arial, sans-serif;
+            width: 220px;
+        }
+        .leaflet-control.leaflet-bar button {
+            padding: 5px 10px;
+            margin: 5px 0;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Türkiye Şehirleri Haritası - Anlık Hava Durumu</h1>
+    </div>
+    <div id="map" class="map-container"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Şehir verileri
+        const cityData = [
+            {"name": "Adana", "lat": 37.0, "lon": 35.3213, "population": 2202590},
+            {"name": "Adıyaman", "lat": 37.7648, "lon": 38.2768, "population": 637146},
+            {"name": "Afyonkarahisar", "lat": 38.7599, "lon": 30.5561, "population": 743216},
+            {"name": "Ağrı", "lat": 39.7199, "lon": 43.0481, "population": 541027},
+            {"name": "Amasya", "lat": 40.6518, "lon": 35.8338, "population": 336510},
+            {"name": "Ankara", "lat": 39.9334, "lon": 32.8597, "population": 5499846},
+            {"name": "Antalya", "lat": 36.8997, "lon": 30.7138, "population": 2523000},
+            {"name": "Artvin", "lat": 41.1800, "lon": 41.8181, "population": 170000},
+            {"name": "Aydın", "lat": 37.8444, "lon": 27.8456, "population": 1051797},
+            {"name": "Balıkesir", "lat": 39.6469, "lon": 27.8800, "population": 1300535},
+            {"name": "Bilecik", "lat": 40.1400, "lon": 29.9783, "population": 224000},
+            {"name": "Bingöl", "lat": 38.8833, "lon": 40.1500, "population": 280000},
+            {"name": "Bitlis", "lat": 38.4, "lon": 42.1, "population": 330000},
+            {"name": "Bolu", "lat": 40.5760, "lon": 31.5788, "population": 314000},
+            {"name": "Burdur", "lat": 37.7, "lon": 30.2903, "population": 258000},
+            {"name": "Bursa", "lat": 40.1828, "lon": 29.0663, "population": 3020000},
+            {"name": "Çanakkale", "lat": 40.1553, "lon": 26.4144, "population": 514000},
+            {"name": "Çorum", "lat": 40.5497, "lon": 34.9556, "population": 534000},
+            {"name": "Denizli", "lat": 37.7744, "lon": 29.0910, "population": 1040000},
+            {"name": "Diyarbakır", "lat": 37.9147, "lon": 40.2351, "population": 1750000},
+            {"name": "Edirne", "lat": 41.6771, "lon": 26.5550, "population": 400000},
+            {"name": "Elazığ", "lat": 38.6810, "lon": 39.2247, "population": 591000},
+            {"name": "Erzincan", "lat": 39.7524, "lon": 39.7540, "population": 232000},
+            {"name": "Erzurum", "lat": 39.9334, "lon": 41.2673, "population": 765000},
+            {"name": "Eskişehir", "lat": 39.7760, "lon": 30.5206, "population": 900000},
+            {"name": "Gaziantep", "lat": 37.0662, "lon": 37.3833, "population": 2040000},
+            {"name": "Giresun", "lat": 40.9167, "lon": 38.3894, "population": 450000},
+            {"name": "Gümüşhane", "lat": 40.4583, "lon": 39.4900, "population": 150000},
+            {"name": "Hakkari", "lat": 37.5719, "lon": 43.7378, "population": 280000},
+            {"name": "Hatay", "lat": 36.3833, "lon": 36.35, "population": 1580000},
+            {"name": "Iğdır", "lat": 40.0364, "lon": 44.0356, "population": 200000},
+            {"name": "Isparta", "lat": 37.7645, "lon": 30.5520, "population": 500000},
+            {"name": "İstanbul", "lat": 41.0082, "lon": 28.9784, "population": 15600000},
+            {"name": "İzmir", "lat": 38.4192, "lon": 27.1287, "population": 4380000},
+            {"name": "Kahramanmaraş", "lat": 37.5736, "lon": 36.9370, "population": 1170000},
+            {"name": "Karabük", "lat": 41.2061, "lon": 32.6204, "population": 250000},
+            {"name": "Kastamonu", "lat": 41.3875, "lon": 33.7833, "population": 375000},
+            {"name": "Kayseri", "lat": 38.7228, "lon": 35.4826, "population": 1420000},
+            {"name": "Kırıkkale", "lat": 39.8450, "lon": 33.5158, "population": 285000},
+            {"name": "Kırklareli", "lat": 41.7342, "lon": 27.2269, "population": 400000},
+            {"name": "Kocaeli", "lat": 40.9833, "lon": 29.8816, "population": 1940000},
+            {"name": "Konya", "lat": 37.8666, "lon": 32.4820, "population": 2300000},
+            {"name": "Kütahya", "lat": 39.4195, "lon": 29.9789, "population": 600000},
+            {"name": "Malatya", "lat": 38.3550, "lon": 38.3097, "population": 800000},
+            {"name": "Manisa", "lat": 38.4680, "lon": 27.1287, "population": 1550000},
+            {"name": "Mardin", "lat": 37.3145, "lon": 40.7270, "population": 800000},
+            {"name": "Mersin", "lat": 36.8136, "lon": 34.6455, "population": 1840000},
+            {"name": "Muğla", "lat": 37.2153, "lon": 28.3640, "population": 940000},
+            {"name": "Muş", "lat": 38.7422, "lon": 41.4820, "population": 400000},
+            {"name": "Nevşehir", "lat": 38.6533, "lon": 34.6856, "population": 290000},
+            {"name": "Niğde", "lat": 37.9670, "lon": 34.6833, "population": 350000},
+            {"name": "Ordu", "lat": 40.9833, "lon": 37.8767, "population": 750000},
+            {"name": "Osmaniye", "lat": 37.2153, "lon": 36.2542, "population": 500000},
+            {"name": "Rize", "lat": 41.0210, "lon": 40.5153, "population": 330000},
+            {"name": "Sakarya", "lat": 40.7808, "lon": 30.4033, "population": 1000000},
+            {"name": "Samsun", "lat": 41.2867, "lon": 36.33, "population": 1300000},
+            {"name": "Siirt", "lat": 37.9344, "lon": 41.9436, "population": 300000},
+            {"name": "Sinop", "lat": 42.01, "lon": 35.1528, "population": 220000},
+            {"name": "Sivas", "lat": 39.7461, "lon": 37.0186, "population": 620000},
+            {"name": "Tekirdağ", "lat": 40.9783, "lon": 27.5119, "population": 400000},
+            {"name": "Tokat", "lat": 40.3167, "lon": 36.5570, "population": 600000},
+            {"name": "Trabzon", "lat": 41.0015, "lon": 39.7178, "population": 800000},
+            {"name": "Tunceli", "lat": 39.1195, "lon": 39.5480, "population": 80000},
+            {"name": "Van", "lat": 38.3000, "lon": 43.4167, "population": 1150000},
+            {"name": "Şanlıurfa", "lat": 37.1611, "lon": 38.7969, "population": 2100000},
+            {"name": "Şırnak", "lat": 37.6, "lon": 42.5, "population": 500000},
+            {"name": "Yalova", "lat": 40.6533, "lon": 29.2711, "population": 280000},
+            {"name": "Zonguldak", "lat": 41.4564, "lon": 31.7987, "population": 600000}
+        ];
+
+        // Haritayı oluştur
+        const map = L.map('map').setView([39.0, 35.0], 6);
+
+        // Harita katmanları
+        const baseLayers = {
+            "Açık Tema": L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }),
+            "Koyu Tema": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            })
+        };
+
+        baseLayers["Açık Tema"].addTo(map);
+
+        // Harita sınırlarını ayarla (Türkiye)
+        map.fitBounds([[36.0, 26.0], [42.0, 45.0]]);
+
+        // Katmanlar
+        const tempLayer = L.featureGroup();
+        const popLayer = L.featureGroup();
+        const weatherLayer = L.featureGroup();
+
+        tempLayer.addTo(map);
+        popLayer.addTo(map);
+        weatherLayer.addTo(map);
+
+        // Katman kontrolü
+        const overlayLayers = {
+            "Sıcaklık": tempLayer,
+            "Nüfus": popLayer,
+            "Hava Durumu": weatherLayer
+        };
+        L.control.layers(baseLayers, overlayLayers, {collapsed: false}).addTo(map);
+
+        // Sıcaklık renk fonksiyonu
+        function getTemperatureColor(temp) {
+            return temp > 30 ? '#FF0000' :
+                   temp > 25 ? '#FF4500' :
+                   temp > 20 ? '#FFA500' :
+                   temp > 15 ? '#FFD700' :
+                   temp > 10 ? '#90EE90' :
+                   temp > 5 ? '#87CEEB' :
+                   temp > 0 ? '#1E90FF' :
+                   '#0000FF';
+        }
+
+        // Nüfus renk fonksiyonu
+        function getPopulationColor(population) {
+            return population > 10000000 ? '#FF0000' :
+                   population > 5000000 ? '#FF4500' :
+                   population > 1000000 ? '#FFA500' :
+                   population > 500000 ? '#FFD700' :
+                   '#90EE90';
+        }
+
+        // Hava durumu ikonları ve renkleri
+        const weatherIcons = {
+            '01d': '☀️', '01n': '🌙',
+            '02d': '⛅', '02n': '☁️',
+            '03d': '☁️', '03n': '☁️',
+            '04d': '☁️', '04n': '☁️',
+            '09d': '🌧️', '09n': '🌧️',
+            '10d': '🌦️', '10n': '🌧️',
+            '11d': '⛈️', '11n': '⛈️',
+            '13d': '🌨️', '13n': '🌨️',
+            '50d': '🌫️', '50n': '🌫️'
+        };
+
+        const weatherColors = {
+            '01d': '#FFD700', '01n': '#4682B4',
+            '02d': '#B0C4DE', '02n': '#778899',
+            '03d': '#778899', '03n': '#778899',
+            '04d': '#778899', '04n': '#778899',
+            '09d': '#4682B4', '09n': '#4682B4',
+            '10d': '#4682B4', '10n': '#4682B4',
+            '11d': '#4B0082', '11n': '#4B0082',
+            '13d': '#F0F8FF', '13n': '#F0F8FF',
+            '50d': '#D3D3D3', '50n': '#D3D3D3'
+        };
+
+        // OpenWeatherMap API bilgileri
+        const OPENWEATHERMAP_API_KEY = 'fee523ac443afec0275cb4be3a1de6d2';
+        const OPENWEATHERMAP_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+
+        async function fetchWeatherData(lat, lon) {
+            try {
+                const response = await fetch(
+                    `${OPENWEATHERMAP_BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHERMAP_API_KEY}&units=metric&lang=tr`
+                );
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return {
+                    temp: Math.round(data.main.temp),
+                    humidity: data.main.humidity,
+                    weather: data.weather[0].icon,
+                    description: data.weather[0].description
+                };
+            } catch (error) {
+                console.error('Hava durumu verisi alınırken hata oluştu:', error);
+                return null;
+            }
+        }
+
+        // Harita işaretçilerini güncelle
+        function updateMapMarkers() {
+            tempLayer.clearLayers();
+            popLayer.clearLayers();
+            weatherLayer.clearLayers();
+
+            cityData.forEach(city => {
+                const popupContent = `
+                    <div style='font-family: Arial; font-size: 14px;'>
+                        <h3 style='margin: 0 0 10px 0;'>${city.name}</h3>
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <span style="font-size: 24px; margin-right: 10px;">${weatherIcons[city.weather] || '🌡️'}</span>
+                            <span>${city.weatherDescription || city.weather}</span>
+                        </div>
+                        <b>Sıcaklık:</b> ${city.temp}°C<br>
+                        <b>Nem:</b> ${city.humidity}%<br>
+                        <b>Nüfus:</b> ${city.population.toLocaleString()}
+                    </div>
+                `;
+
+                // Sıcaklık işaretçisi
+                const tempMarker = L.circleMarker([city.lat, city.lon], {
+                    radius: 12,
+                    color: 'black',
+                    weight: 1,
+                    fillColor: getTemperatureColor(city.temp),
+                    fillOpacity: 0.7
+                })
+                .bindPopup(popupContent)
+                .bindTooltip(`${city.name}: ${city.temp}°C`);
+                tempLayer.addLayer(tempMarker);
+
+                // Nüfus işaretçisi
+                const popMarker = L.circleMarker([city.lat, city.lon], {
+                    radius: Math.sqrt(city.population) / 1000,
+                    color: 'black',
+                    weight: 1,
+                    fillColor: getPopulationColor(city.population),
+                    fillOpacity: 0.7
+                })
+                .bindPopup(popupContent)
+                .bindTooltip(`${city.name}: ${(city.population/1000000).toFixed(1)}M`);
+                popLayer.addLayer(popMarker);
+
+                // Hava durumu işaretçisi
+                const weatherMarker = L.circleMarker([city.lat, city.lon], {
+                    radius: 12,
+                    color: 'black',
+                    weight: 1,
+                    fillColor: weatherColors[city.weather] || '#3388ff',
+                    fillOpacity: 0.7
+                })
+                .bindPopup(popupContent)
+                .bindTooltip(`${city.name}: ${weatherIcons[city.weather]} ${city.weatherDescription}`);
+                weatherLayer.addLayer(weatherMarker);
+            });
+        }
+
+        // Tüm şehirlerin hava durumunu güncelle
+        async function updateAllWeather() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.cssText = 'position: fixed; top: 10px; right: 10px; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);';
+            loadingDiv.innerHTML = 'Hava durumu verileri güncelleniyor...';
+            document.body.appendChild(loadingDiv);
+
+            try {
+                for (const city of cityData) {
+                    const weatherData = await fetchWeatherData(city.lat, city.lon);
+                    if (weatherData) {
+                        city.temp = weatherData.temp;
+                        city.humidity = weatherData.humidity;
+                        city.weather = weatherData.weather;
+                        city.weatherDescription = weatherData.description;
+                    } else {
+                        city.temp = 0;
+                        city.humidity = 0;
+                        city.weather = '01d';
+                        city.weatherDescription = 'Veri yok';
+                    }
+                }
+                updateMapMarkers();
+            } catch (error) {
+                console.error('Hava durumu güncellenirken hata oluştu:', error);
+            } finally {
+                document.body.removeChild(loadingDiv);
+            }
+        }
+
+        // Lejant ekle
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <div class="legend-section">
+                    <h4>Sıcaklık (°C)</h4>
+                    <div class="legend-item"><div class="legend-color" style="background: #0000FF"></div><span>0°C ve altı</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #1E90FF"></div><span>0-5°C</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #87CEEB"></div><span>5-10°C</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #90EE90"></div><span>10-15°C</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FFD700"></div><span>15-20°C</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FFA500"></div><span>20-25°C</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FF4500"></div><span>25-30°C</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FF0000"></div><span>30°C üstü</span></div>
+                </div>
+                <div class="legend-section">
+                    <h4>Nüfus</h4>
+                    <div class="legend-item"><div class="legend-color" style="background: #90EE90"></div><span>500 bin altı</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FFD700"></div><span>500 bin - 1 milyon</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FFA500"></div><span>1-5 milyon</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FF4500"></div><span>5-10 milyon</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FF0000"></div><span>10 milyon üstü</span></div>
+                </div>
+                <div class="legend-section">
+                    <h4>Hava Durumu</h4>
+                    <div class="legend-item"><div class="legend-color" style="background: #FFD700"></div><span>Güneşli ☀️</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #B0C4DE"></div><span>Az Bulutlu ⛅</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #778899"></div><span>Bulutlu ☁️</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #4682B4"></div><span>Yağmurlu 🌧️</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #4B0082"></div><span>Gök Gürültülü ⛈️</span></div>
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+
+        // Hava durumu kontrol paneli
+        const weatherControl = L.control({ position: 'topleft' });
+        weatherControl.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+            div.innerHTML = `
+                <h4 style="margin: 0 0 10px 0;">Hava Durumu Kontrolleri</h4>
+                <button id="updateWeatherBtn">Hava Durumunu Güncelle</button>
+                <button id="autoUpdateBtn">Otomatik Güncellemeyi Başlat</button>
+                <div id="weatherInfo" style="margin-top: 10px; font-size: 14px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <span style="margin-right: 10px;">Güneşli:</span>
+                        <span style="font-size: 20px;">☀️</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <span style="margin-right: 10px;">Bulutlu:</span>
+                        <span style="font-size: 20px;">☁️</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <span style="margin-right: 10px;">Yağmurlu:</span>
+                        <span style="font-size: 20px;">🌧️</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <span style="margin-right: 10px;">Gök Gürültülü:</span>
+                        <span style="font-size: 20px;">⛈️</span>
+                    </div>
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 10px;">
+                    Veriler OpenWeatherMap'ten alınmaktadır
+                </div>
+            `;
+            return div;
+        };
+        weatherControl.addTo(map);
+
+        // Otomatik güncelleme işlemi
+        let autoUpdateInterval = null;
+
+        document.getElementById('updateWeatherBtn').addEventListener('click', updateAllWeather);
+
+        document.getElementById('autoUpdateBtn').addEventListener('click', () => {
+            const btn = document.getElementById('autoUpdateBtn');
+            if (autoUpdateInterval) {
+                clearInterval(autoUpdateInterval);
+                autoUpdateInterval = null;
+                btn.textContent = 'Otomatik Güncellemeyi Başlat';
+                btn.style.backgroundColor = '#4CAF50';
+            } else {
+                autoUpdateInterval = setInterval(updateAllWeather, 300000); // 5 dakikada bir
+                btn.textContent = 'Otomatik Güncellemeyi Durdur';
+                btn.style.backgroundColor = '#f44336';
+            }
+        });
+
+        // Sayfa yüklendiğinde ilk veri çekme
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAllWeather();
+        });
+    </script>
+</body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>
